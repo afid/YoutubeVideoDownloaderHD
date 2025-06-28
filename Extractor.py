@@ -175,6 +175,10 @@ class YouTubeDownloader:
     def download_video(self, url):
         """Fonction principale de téléchargement"""
         try:
+            # Créer le dossier Downloads s'il n'existe pas
+            download_folder = "Downloads"
+            os.makedirs(download_folder, exist_ok=True)
+            
             self.root.after(0, self._update_status, "Connexion à YouTube...")
             
             # Créer l'objet YouTube pour la vidéo
@@ -202,9 +206,9 @@ class YouTubeDownloader:
             if not video_stream.is_progressive:
                 self.root.after(0, self._update_status, "Téléchargement de la vidéo...")
                 
-                # Télécharger la vidéo
+                # Télécharger la vidéo dans le dossier Downloads
                 video_filename = f"{clean_title}_video.mp4"
-                video_path = video_stream.download(filename=video_filename)
+                video_path = video_stream.download(output_path=download_folder, filename=video_filename)
                 
                 self.root.after(0, self._update_status, "Téléchargement de l'audio...")
                 
@@ -221,14 +225,14 @@ class YouTubeDownloader:
                 if not audio_stream:
                     raise Exception("Aucun flux audio trouvé")
                 
-                # Télécharger l'audio
+                # Télécharger l'audio dans le dossier Downloads
                 audio_filename = f"{clean_title}_audio.mp4"
-                audio_path = audio_stream.download(filename=audio_filename)
+                audio_path = audio_stream.download(output_path=download_folder, filename=audio_filename)
                 
                 self.root.after(0, self._update_status, "Combinaison vidéo et audio...")
                 
-                # Combiner avec ffmpeg
-                output_path = f"{clean_title}.mp4"
+                # Combiner avec ffmpeg dans le dossier Downloads
+                output_path = os.path.join(download_folder, f"{clean_title}.mp4")
                 
                 # Simuler la progression de ffmpeg
                 ffmpeg_thread = threading.Thread(target=self.simulate_ffmpeg_progress)
@@ -250,8 +254,7 @@ class YouTubeDownloader:
                 # Nettoyer les fichiers temporaires
                 if os.path.exists(video_path):
                     os.remove(video_path)
-                # if os.path.exists(audio_path):
-                #    os.remove(audio_path)
+                # Conserver le fichier audio (ne pas supprimer audio_path)
                 
                 self.root.after(0, self._update_status, f"Téléchargement terminé: {output_path}")
                 
@@ -259,16 +262,16 @@ class YouTubeDownloader:
                 # Flux progressif - déjà la meilleure qualité disponible en progressif
                 self.root.after(0, self._update_status, f"Téléchargement en cours... Résolution: {video_stream.resolution}")
                 output_filename = f"{clean_title}.mp4"
-                video_stream.download(filename=output_filename)
+                output_path = video_stream.download(output_path=download_folder, filename=output_filename)
                 
                 # Simuler la progression audio et combinaison pour l'interface
                 self.root.after(0, self._update_audio_ui, 1.0)
                 self.root.after(0, self._update_combine_ui, 1.0)
                 
-                self.root.after(0, self._update_status, f"Téléchargement terminé: {output_filename}")
+                self.root.after(0, self._update_status, f"Téléchargement terminé: {output_path}")
             
             # Afficher le message de succès
-            self.root.after(0, lambda: messagebox.showinfo("Succès", "Téléchargement terminé avec succès!"))
+            self.root.after(0, lambda: messagebox.showinfo("Succès", f"Téléchargement terminé avec succès!\nFichiers sauvegardés dans: {download_folder}"))
             
         except subprocess.CalledProcessError:
             error_msg = "Erreur lors de la combinaison. Assurez-vous que ffmpeg est installé."
