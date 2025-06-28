@@ -1,0 +1,13 @@
+# YouTube Video Downloader HD - Requirements
+# Interface graphique moderne
+customtkinter>=5.2.0
+
+# Téléchargement YouTube avec corrections de bugs
+pytubefix>=6.0.0
+
+# Dépendances système (à installer séparément)
+# FFmpeg - requis pour la combinaison vidéo/audio
+# Installation :
+# - Windows: Télécharger depuis https://ffmpeg.org/download.html
+# - macOS: brew install ffmpeg  
+# - Linux: sudo apt install ffmpeg
